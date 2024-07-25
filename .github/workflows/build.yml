@@ -4,9 +4,24 @@ on:
   workflow_call:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+        - os: ubuntu-latest
+          artifact_name: c2rust
+          asset_postfix: linux-amd64
+        - os: windows-latest
+          artifact_name: c2rust.exe
+          asset_postfix: windows-amd64.exe
+        - os: macos-latest
+          artifact_name: c2rust
+          asset_postfix: darwin-amd64
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
 
@@ -18,16 +33,23 @@ jobs:
       with:
         workspaces: ""
 
-    - name: Install dependencies
+    - name: Install dependencies (Ubuntu)
+      if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential llvm clang libclang-14-dev cmake libssl-dev pkg-config python3 git
+        echo "LLVM_CONFIG_PATH=/usr/bin/llvm-config-14" >> $GITHUB_ENV
+    
+    - name: Install dependencies (macOS)
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        brew install llvm python3 cmake openssl
+        echo "LLVM_CONFIG_PATH=/usr/local/opt/llvm/bin/llvm-config" >> $GITHUB_ENV
 
     - name: Build
       run: |
-        export LLVM_CONFIG_PATH=/usr/bin/llvm-config-14
         cargo install --git https://github.com/immunant/c2rust.git c2rust --locked --root ~/.cargo/bin
-    
+
     - name: Revision
       id: revision
       run: |
@@ -36,8 +58,7 @@ jobs:
     
     - name: Update README
       run: |
-        readme=$(cat README.md | sed -n 's/Last build: \(.*\)/Last build: ${{ steps.revision.outputs.revision }}/p')
-        echo "$readme" > README.md
+        sed -i 's/^Last build:.*$/Last build: ${{ steps.revision.outputs.revision }}/' README.md
 
     - name: Commit changes
       run: |
@@ -45,12 +66,12 @@ jobs:
         git config --local user.name "github-actions[bot]"
         git add README.md
         git commit -m "Last build: ${{ steps.revision.outputs.revision }}"
+        git tag -a ${{ steps.revision.outputs.revision }} -m "Last build: ${{ steps.revision.outputs.revision }}"
         git push
     
     - name: Release
-      uses: softprops/action-gh-release@v2
+      uses: svenstaro/upload-release-action@v2
       with:
-        name: Nightly build ${{ steps.revision.outputs.revision }}
-        body_path: "Last build: ${{ steps.revision.outputs.revision }}"
-        fail_on_unmatched_files: true
-        files: ~/.cargo/bin/c2rust
+        release_name: Nightly build ${{ steps.revision.outputs.revision }}
+        asset_name: c2rust-${{ matrix.asset_postfix }}
+        file: ~/.cargo/bin/c2rust

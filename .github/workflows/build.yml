@@ -70,6 +70,7 @@ jobs:
     - name: Release
       uses: svenstaro/upload-release-action@v2
       with:
+        tag: ${{ steps.revision.outputs.revision }}
         release_name: Nightly build ${{ steps.revision.outputs.revision }}
         asset_name: c2rust-${{ matrix.asset_postfix }}
         file: ~/.cargo/bin/c2rust

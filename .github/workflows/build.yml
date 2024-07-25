@@ -13,13 +13,11 @@ jobs:
       matrix:
         include:
         - os: ubuntu-latest
-          artifact_name: c2rust
           asset_postfix: linux-amd64
         # - os: windows-latest
         #   artifact_name: c2rust.exe
         #   asset_postfix: windows-amd64.exe
         - os: macos-latest
-          artifact_name: c2rust
           asset_postfix: darwin-amd64
     runs-on: ${{ matrix.os }}
     steps:
@@ -48,14 +46,14 @@ jobs:
 
     - name: Build
       run: |
-        cargo install --git https://github.com/immunant/c2rust.git c2rust --locked --root ~/.cargo/
-        cp ~/.cargo/bin/c2rust ~/.cargo/bin/c2rust-${{ matrix.asset_postfix }}
+        cargo install --git https://github.com/immunant/c2rust.git --locked --root dist
+        tar -cf c2rust-${{ matrix.asset_postfix }}.tar dist/bin/*
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: c2rust-${{ matrix.asset_postfix }}
-        path: ~/.cargo/bin/c2rust-${{ matrix.asset_postfix }}
+        path: c2rust-${{ matrix.asset_postfix }}.tar
         if-no-files-found: error
   
   release:

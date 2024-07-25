@@ -52,6 +52,7 @@ jobs:
     - name: Build
       run: |
         cargo install --git https://github.com/immunant/c2rust.git c2rust --locked --root ~/.cargo/
+        cp ~/.cargo/bin/c2rust ~/.cargo/bin/c2rust-${{ matrix.asset_postfix }}
 
     - name: Revision
       id: revision
@@ -65,7 +66,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: c2rust
-        path: ~/.cargo/bin/${{ matrix.artifact_name }}
+        path: ~/.cargo/bin/c2rust-${{ matrix.asset_postfix }}
         if-no-files-found: error
   
   release:

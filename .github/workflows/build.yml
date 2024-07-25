@@ -48,7 +48,7 @@ jobs:
 
     - name: Build
       run: |
-        cargo install --git https://github.com/immunant/c2rust.git c2rust --locked --root ~/.cargo/bin
+        cargo install --git https://github.com/immunant/c2rust.git c2rust --locked --root ~/.cargo/
 
     - name: Revision
       id: revision

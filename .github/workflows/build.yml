@@ -22,9 +22,6 @@ jobs:
           artifact_name: c2rust
           asset_postfix: darwin-amd64
     runs-on: ${{ matrix.os }}
-    outputs:
-      revision: ${{ steps.revision.outputs.revision }}
-      tag: ${{ steps.revision.outputs.tag }}
     steps:
     - uses: actions/checkout@v4
 
@@ -53,14 +50,6 @@ jobs:
       run: |
         cargo install --git https://github.com/immunant/c2rust.git c2rust --locked --root ~/.cargo/
         cp ~/.cargo/bin/c2rust ~/.cargo/bin/c2rust-${{ matrix.asset_postfix }}
-
-    - name: Revision
-      id: revision
-      run: |
-        revision=$(curl -s https://api.github.com/repos/immunant/c2rust/commits/master | jq -r .sha)
-        time=$(date -u +"%Y-%m-%d-%H-%M-%S")
-        echo "revision=$revision" >> $GITHUB_OUTPUT
-        echo "tag=nightly-$time" >> $GITHUB_OUTPUT
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -74,28 +63,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
+    - name: Revision
+      id: revision
+      run: |
+        revision=$(curl -s https://api.github.com/repos/immunant/c2rust/commits/master | jq -r .sha)
+        time=$(date -u +"%Y-%m-%d-%H-%M-%S")
+        echo "revision=$revision" >> $GITHUB_OUTPUT
+        echo "tag=nightly-$time" >> $GITHUB_OUTPUT
     
     - name: Commit changes
       run: |
-        sed -i 's/^Last build:.*$/Last build: ${{ needs.build.outputs.revision }}/' README.md
+        sed -i 's/^Last build:.*$/Last build: ${{ steps.revision.outputs.revision }}/' README.md
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git add README.md
-        git commit -m "Last build: ${{ needs.build.outputs.revision }}"
-        git tag -a ${{ needs.build.outputs.tag }} -m "Last build: ${{ needs.build.outputs.revision }}"
+        git commit -m "Last build: ${{ steps.revision.outputs.revision }}"
+        git tag -a ${{ steps.revision.outputs.tag }} -m "Last build: ${{ steps.revision.outputs.revision }}"
         git push
 
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
         pattern: c2rust-*
-        path: ~/.cargo/bin
+        path: dist
         merge-multiple: true
     
     - name: Release
       uses: softprops/action-gh-release@v2
       with:
-        files: ~/.cargo/bin/c2rust-*
+        files: dist/*
         fail_on_unmatched_files: true
-        tag_name: ${{ needs.build.outputs.tag }}
-        body: ${{ needs.build.outputs.revision }}
+        tag_name: ${{ steps.revision.outputs.tag }}
+        body: ${{ steps.revision.outputs.revision }}

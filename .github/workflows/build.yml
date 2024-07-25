@@ -25,8 +25,8 @@ jobs:
 
     - name: Setup rust toolchain
       run: |
-        rustup default nightly
-        rustup component add rust-src rustc-dev llvm-tools-preview
+        rustup default nightly-2022-08-08
+        rustup component add rust-src rustc-dev
 
     - name: Setup rust cache
       uses: Swatinem/rust-cache@v2

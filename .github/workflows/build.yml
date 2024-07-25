@@ -56,12 +56,10 @@ jobs:
         revision=$(curl -s https://api.github.com/repos/immunant/c2rust/commits/master | jq -r .sha)
         echo "revision=$revision" >> $GITHUB_OUTPUT
     
-    - name: Update README
+    - name: Commit changes
+      if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
         sed -i 's/^Last build:.*$/Last build: ${{ steps.revision.outputs.revision }}/' README.md
-
-    - name: Commit changes
-      run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git add README.md

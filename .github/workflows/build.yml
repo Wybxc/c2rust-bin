@@ -46,7 +46,8 @@ jobs:
 
     - name: Build
       run: |
-        cargo install --git https://github.com/immunant/c2rust.git --locked --root dist
+        git clone https://github.com/immunant/c2rust.git --depth 1
+        cargo install --path c2rust --locked --root dist
         tar -cf c2rust-${{ matrix.asset_postfix }}.tar dist/bin/*
     
     - name: Upload artifact

@@ -1,0 +1,40 @@
+name: Watch Changes
+
+on:
+  push:
+
+  schedule:
+  - cron: '30 5 * * *'
+
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      changes: ${{ steps.check.outputs.changes }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check for changes
+      id: check
+      run: |
+        revision=$(curl -s https://api.github.com/repos/immunant/c2rust/commits/master | jq -r .sha)
+        echo "Upstream: $revision"
+
+        build=$(cat README.md | grep "Last build:")
+        build_revision=$(echo $build | sed -n 's/.*Last build: \([0-9a-f]*\).*/\1/p')
+        echo "Last build: $build_revision"
+
+        if [ "$revision" != "$build_revision" ]; then
+            echo "Changes detected"
+            echo "changes=true" >> $GITHUB_OUTPUT
+        else
+            echo "No changes detected"
+            echo "changes=false" >> $GITHUB_OUTPUT
+        fi
+  
+  build:
+    needs: check
+    if: ${{ needs.check.outputs.changes == 'true' }}
+    uses: ./.github/workflows/build.yml

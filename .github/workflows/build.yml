@@ -69,18 +69,8 @@ jobs:
         path: ~/.cargo/bin/c2rust-${{ matrix.asset_postfix }}
         if-no-files-found: error
   
-  merge:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Merge Artifacts
-      uses: actions/upload-artifact/merge@v4
-      with:
-        name: c2rust
-        pattern: c2rust-*
-  
   release:
-    needs: [build, merge]
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -98,13 +88,14 @@ jobs:
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
-        name: c2rust
+        pattern: c2rust-*
         path: ~/.cargo/bin
+        merge-multiple: true
     
     - name: Release
       uses: softprops/action-gh-release@v2
       with:
         files: ~/.cargo/bin/c2rust-*
+        fail_on_unmatched_files: true
         tag_name: ${{ needs.build.outputs.tag }}
         body: ${{ needs.build.outputs.revision }}
-

@@ -58,9 +58,9 @@ jobs:
       id: revision
       run: |
         revision=$(curl -s https://api.github.com/repos/immunant/c2rust/commits/master | jq -r .sha)
-        isotime=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        time=$(date -u +"%Y-%m-%d-%H-%M-%S")
         echo "revision=$revision" >> $GITHUB_OUTPUT
-        echo "tag=nightly-$isotime" >> $GITHUB_OUTPUT
+        echo "tag=nightly-$time" >> $GITHUB_OUTPUT
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4

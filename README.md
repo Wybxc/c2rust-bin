@@ -1,5 +1,5 @@
 # c2rust-bin
 
-Last build: b3aecb0720d8207282006f913edfaef3edd8bd7b
+Last build: d762adf94e2f6f777eb7f872bb10ba50abee5d51
 
 Auto release builds of [c2rust](https://github.com/immunant/c2rust).
